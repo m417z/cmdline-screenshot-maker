@@ -3,3 +3,6 @@ http://rammichael.com/a-command-line-screenshot-maker
 
 Based on:
 https://blog.mozilla.org/ted/2009/02/05/command-line-screenshot-tool-for-windows/
+
+To build with GCC/MingW32 run a command like this:
+g++ -O3 'Screenshot Maker.cpp' -s -static -o screenshot.exe -municode -lgdi32 -lgdiplus
