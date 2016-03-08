@@ -36,7 +36,8 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
 	BitBlt(mydc,0,0,width,height,desktopdc,0,0, SRCCOPY|CAPTUREBLT);
 	SelectObject(mydc, oldbmp);
 
-	wchar_t* filename = L"screenshot.png";
+	bool defaultfn = true;
+	const wchar_t* filename = L"screenshot.png";
 	wchar_t encoder[16] = L"image/png";
 	long quality = -1;
 	int resize = -1;
@@ -44,13 +45,28 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
 	for(int i=1; i<__argc-1; i++)
 	{
 		if(wcscmp(__wargv[i], L"-filename") == 0)
+		{
+			defaultfn = false;
 			filename = __wargv[++i];
+		}
 		else if(wcscmp(__wargv[i], L"-encoder") == 0)
 			wcsncpy_s(encoder+wcslen(L"image/"), 16-wcslen(L"image/"), __wargv[++i], _TRUNCATE);
 		else if(wcscmp(__wargv[i], L"-quality") == 0)
 			quality = _wtoi(__wargv[++i]);
 		else if(wcscmp(__wargv[i], L"-resize") == 0)
 			resize = _wtoi(__wargv[++i]);
+	}
+
+	if(defaultfn == true)
+	{
+		if(wcscmp(encoder, L"image/bmp") == 0)
+			filename = L"screenshot.bmp";
+		else if(wcscmp(encoder, L"image/jpeg") == 0)
+			filename = L"screenshot.jpg";
+		else if(wcscmp(encoder, L"image/gif") == 0)
+			filename = L"screenshot.gif";
+		else if(wcscmp(encoder, L"image/tiff") == 0)
+			filename = L"screenshot.tif";
 	}
 
 	Bitmap* b = Bitmap::FromHBITMAP(mybmp, NULL);
