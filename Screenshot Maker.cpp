@@ -11,6 +11,7 @@ Usage:
 
 #include <windows.h>
 #include <gdiplus.h>
+#include <iostream>
 
 using namespace Gdiplus;
 
@@ -38,36 +39,66 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
 
 	bool defaultfn = true;
 	const wchar_t* filename = L"screenshot.png";
+	wchar_t format[5] = L"png";
 	wchar_t encoder[16] = L"image/png";
 	long quality = -1;
 	int resize = -1;
 
-	for(int i=1; i<__argc-1; i++)
+#define ARGV(x) wcscmp(__wargv[i], x) == 0
+	for(int i=1; i<__argc; i++)
 	{
-		if(wcscmp(__wargv[i], L"-filename") == 0)
+		if(ARGV(L"-help") || ARGV(L"--help") || ARGV(L"-h") || ARGV(L"-?"))
+		{
+			std::wcout <<
+				"Usage:\n\n"
+				"  -h, -help                 display this help and exit\n"
+				"  -f, -filename \"out.png\"   file name (default: screenshot.png)\n"
+				"  -e, -encoder png          file encoder: bmp/jpeg/gif/tiff/png (default: png)\n"
+				"  -q, -quality 100          file quality for jpeg (between 0 and 100)\n"
+				"  -r, -resize 50            image size, % of the original size (between 1 and 99)\n\n"
+				"Copyright (c) 2009, The Mozilla Foundation\n";
+			return 0;
+		}
+		else if(ARGV(L"-filename") || ARGV(L"-f"))
 		{
 			defaultfn = false;
 			filename = __wargv[++i];
 		}
-		else if(wcscmp(__wargv[i], L"-encoder") == 0)
-			wcsncpy_s(encoder+wcslen(L"image/"), 16-wcslen(L"image/"), __wargv[++i], _TRUNCATE);
-		else if(wcscmp(__wargv[i], L"-quality") == 0)
-			quality = _wtoi(__wargv[++i]);
-		else if(wcscmp(__wargv[i], L"-resize") == 0)
+		else if(ARGV(L"-encoder") || ARGV(L"-e"))
+			wcsncpy_s(format, 5, __wargv[++i], _TRUNCATE);
+		else if(ARGV(L"-quality") || ARGV(L"-q"))
+			quality = _wtol(__wargv[++i]);
+		else if(ARGV(L"-resize") || ARGV(L"-r"))
 			resize = _wtoi(__wargv[++i]);
+	}
+#undef ARGV
+
+#define FMT(x) wcscmp(format, x) == 0
+#define NFMT(x) wcscmp(format, x) != 0
+	if(FMT(L"jpg"))
+		wcsncpy(format, L"jpeg", 5);
+	else if(FMT(L"tif"))
+		wcsncpy(format, L"tiff", 5);
+
+	if(NFMT(L"bmp") && NFMT(L"jpeg") && NFMT(L"gif") && NFMT(L"tiff") && NFMT(L"png"))
+	{
+		std::wcout << "warning: unkown file encoder! png will be used instead.\n";
+		wcsncpy(format, L"png", 5);
 	}
 
 	if(defaultfn == true)
 	{
-		if(wcscmp(encoder, L"image/bmp") == 0)
+		if(FMT(L"bmp"))
 			filename = L"screenshot.bmp";
-		else if(wcscmp(encoder, L"image/jpeg") == 0)
+		else if(FMT(L"jpeg"))
 			filename = L"screenshot.jpg";
-		else if(wcscmp(encoder, L"image/gif") == 0)
+		else if(FMT(L"gif"))
 			filename = L"screenshot.gif";
-		else if(wcscmp(encoder, L"image/tiff") == 0)
+		else if(FMT(L"tiff"))
 			filename = L"screenshot.tif";
 	}
+#undef FMT
+#undef NFMT
 
 	Bitmap* b = Bitmap::FromHBITMAP(mybmp, NULL);
 	CLSID encoderClsid;
@@ -80,6 +111,8 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
 		delete b;
 		b = temp;
 	}
+
+	wcsncpy_s(encoder+wcslen(L"image/"), 16-wcslen(L"image/"), format, _TRUNCATE);
 
 	if(b)
 	{
