@@ -44,10 +44,10 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
 	long quality = -1;
 	int resize = -1;
 
-#define ARGV(x) wcscmp(__wargv[i], x) == 0
 	for(int i=1; i<__argc; i++)
 	{
-		if(ARGV(L"-help") || ARGV(L"--help") || ARGV(L"-h") || ARGV(L"-?"))
+		if(wcscmp(__wargv[i], L"-help") == 0 || wcscmp(__wargv[i], L"--help") == 0 ||
+		   wcscmp(__wargv[i], L"-h") == 0 || wcscmp(__wargv[i], L"-?") == 0)
 		{
 			std::wcout <<
 				"Usage:\n\n"
@@ -59,46 +59,47 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
 				"Copyright (c) 2009, The Mozilla Foundation\n";
 			return 0;
 		}
-		else if(ARGV(L"-filename") || ARGV(L"-f"))
+	}
+
+	for(int i=1; i<__argc-1; i++)
+	{
+		if(wcscmp(__wargv[i], L"-filename") == 0 || wcscmp(__wargv[i], L"-f") == 0)
 		{
 			defaultfn = false;
 			filename = __wargv[++i];
 		}
-		else if(ARGV(L"-encoder") || ARGV(L"-e"))
+		else if(wcscmp(__wargv[i], L"-encoder") == 0 || wcscmp(__wargv[i], L"-e") == 0)
 			wcsncpy_s(format, 5, __wargv[++i], _TRUNCATE);
-		else if(ARGV(L"-quality") || ARGV(L"-q"))
+		else if(wcscmp(__wargv[i], L"-quality") == 0 || wcscmp(__wargv[i], L"-q") == 0)
 			quality = _wtol(__wargv[++i]);
-		else if(ARGV(L"-resize") || ARGV(L"-r"))
+		else if(wcscmp(__wargv[i], L"-resize") == 0 || wcscmp(__wargv[i], L"-r") == 0)
 			resize = _wtoi(__wargv[++i]);
 	}
-#undef ARGV
 
-#define FMT(x) wcscmp(format, x) == 0
-#define NFMT(x) wcscmp(format, x) != 0
-	if(FMT(L"jpg"))
-		wcsncpy(format, L"jpeg", 5);
-	else if(FMT(L"tif"))
-		wcsncpy(format, L"tiff", 5);
+	if(wcscmp(format, L"jpg") == 0)
+		wcsncpy_s(format, 5, L"jpeg", _TRUNCATE);
+	else if(wcscmp(format, L"tif") == 0)
+		wcsncpy_s(format, 5, L"tiff", _TRUNCATE);
 
-	if(NFMT(L"bmp") && NFMT(L"jpeg") && NFMT(L"gif") && NFMT(L"tiff") && NFMT(L"png"))
+	if(wcscmp(format, L"bmp") != 0 && wcscmp(format, L"jpeg") != 0 &&
+	   wcscmp(format, L"gif") != 0 && wcscmp(format, L"tiff") != 0 && 
+	   wcscmp(format, L"png") != 0)
 	{
 		std::wcout << "warning: unkown file encoder! png will be used instead.\n";
-		wcsncpy(format, L"png", 5);
+		wcsncpy_s(format, 5, L"png", _TRUNCATE);
 	}
 
 	if(defaultfn == true)
 	{
-		if(FMT(L"bmp"))
+		if(wcscmp(format, L"bmp") == 0)
 			filename = L"screenshot.bmp";
-		else if(FMT(L"jpeg"))
+		else if(wcscmp(format, L"jpeg") == 0)
 			filename = L"screenshot.jpg";
-		else if(FMT(L"gif"))
+		else if(wcscmp(format, L"gif") == 0)
 			filename = L"screenshot.gif";
-		else if(FMT(L"tiff"))
+		else if(wcscmp(format, L"tiff") == 0)
 			filename = L"screenshot.tif";
 	}
-#undef FMT
-#undef NFMT
 
 	Bitmap* b = Bitmap::FromHBITMAP(mybmp, NULL);
 	CLSID encoderClsid;
