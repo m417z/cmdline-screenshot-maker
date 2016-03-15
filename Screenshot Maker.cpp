@@ -11,6 +11,7 @@ Usage:
 
 #include <windows.h>
 #include <gdiplus.h>
+#include <iostream>
 
 using namespace Gdiplus;
 
@@ -38,34 +39,65 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
 
 	bool defaultfn = true;
 	const wchar_t* filename = L"screenshot.png";
+	wchar_t format[5] = L"png";
 	wchar_t encoder[16] = L"image/png";
 	long quality = -1;
 	int resize = -1;
 
+	for(int i=1; i<__argc; i++)
+	{
+		if(wcscmp(__wargv[i], L"-help") == 0 || wcscmp(__wargv[i], L"--help") == 0 ||
+		   wcscmp(__wargv[i], L"-h") == 0 || wcscmp(__wargv[i], L"-?") == 0)
+		{
+			std::wcout <<
+				"Usage:\n\n"
+				"  -h, -help                 display this help and exit\n"
+				"  -f, -filename \"out.png\"   file name (default: screenshot.png)\n"
+				"  -e, -encoder png          file encoder: bmp/jpeg/gif/tiff/png (default: png)\n"
+				"  -q, -quality 100          file quality for jpeg (between 0 and 100)\n"
+				"  -r, -resize 50            image size, % of the original size (between 1 and 99)\n\n"
+				"Copyright (c) 2009, The Mozilla Foundation\n";
+			return 0;
+		}
+	}
+
 	for(int i=1; i<__argc-1; i++)
 	{
-		if(wcscmp(__wargv[i], L"-filename") == 0)
+		if(wcscmp(__wargv[i], L"-filename") == 0 || wcscmp(__wargv[i], L"-f") == 0)
 		{
 			defaultfn = false;
 			filename = __wargv[++i];
 		}
-		else if(wcscmp(__wargv[i], L"-encoder") == 0)
-			wcsncpy_s(encoder+wcslen(L"image/"), 16-wcslen(L"image/"), __wargv[++i], _TRUNCATE);
-		else if(wcscmp(__wargv[i], L"-quality") == 0)
-			quality = _wtoi(__wargv[++i]);
-		else if(wcscmp(__wargv[i], L"-resize") == 0)
+		else if(wcscmp(__wargv[i], L"-encoder") == 0 || wcscmp(__wargv[i], L"-e") == 0)
+			wcsncpy_s(format, 5, __wargv[++i], _TRUNCATE);
+		else if(wcscmp(__wargv[i], L"-quality") == 0 || wcscmp(__wargv[i], L"-q") == 0)
+			quality = _wtol(__wargv[++i]);
+		else if(wcscmp(__wargv[i], L"-resize") == 0 || wcscmp(__wargv[i], L"-r") == 0)
 			resize = _wtoi(__wargv[++i]);
+	}
+
+	if(wcscmp(format, L"jpg") == 0)
+		wcsncpy_s(format, 5, L"jpeg", _TRUNCATE);
+	else if(wcscmp(format, L"tif") == 0)
+		wcsncpy_s(format, 5, L"tiff", _TRUNCATE);
+
+	if(wcscmp(format, L"bmp") != 0 && wcscmp(format, L"jpeg") != 0 &&
+	   wcscmp(format, L"gif") != 0 && wcscmp(format, L"tiff") != 0 && 
+	   wcscmp(format, L"png") != 0)
+	{
+		std::wcout << "warning: unkown file encoder! png will be used instead.\n";
+		wcsncpy_s(format, 5, L"png", _TRUNCATE);
 	}
 
 	if(defaultfn == true)
 	{
-		if(wcscmp(encoder, L"image/bmp") == 0)
+		if(wcscmp(format, L"bmp") == 0)
 			filename = L"screenshot.bmp";
-		else if(wcscmp(encoder, L"image/jpeg") == 0)
+		else if(wcscmp(format, L"jpeg") == 0)
 			filename = L"screenshot.jpg";
-		else if(wcscmp(encoder, L"image/gif") == 0)
+		else if(wcscmp(format, L"gif") == 0)
 			filename = L"screenshot.gif";
-		else if(wcscmp(encoder, L"image/tiff") == 0)
+		else if(wcscmp(format, L"tiff") == 0)
 			filename = L"screenshot.tif";
 	}
 
@@ -80,6 +112,8 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
 		delete b;
 		b = temp;
 	}
+
+	wcsncpy_s(encoder+wcslen(L"image/"), 16-wcslen(L"image/"), format, _TRUNCATE);
 
 	if(b)
 	{
